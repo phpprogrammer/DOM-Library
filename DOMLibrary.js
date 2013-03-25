@@ -272,11 +272,11 @@
 		html: function(h) {
 			if(h == null) {
 				return this.active().innerHTML;
-			} else if(h == true) {
+			} else if(h === true) {
 				return this.active().outerHTML;
 			} else {
 				$.each(this, function() {
-					this.innerHTML = h;
+					this.innerHTML = h+'';
 				});
 				return this;
 			} 
@@ -308,7 +308,9 @@
 				left: a.offsetLeft,
 				parent: a.offsetParent,
 				top: a.offsetTop,
-				width: a.offsetWidth
+				width: a.offsetWidth,
+                right: window.outerWidth - a.clientWidth - a.offsetLeft,
+                bottom: window.outerHeight - a.clientHeight - a.offsetTop
 			};
 		},
 		origin: function() {
@@ -1138,15 +1140,17 @@
 		return this;
 	};
 	Object.prototype.emit = function(n, a) {
-		if(!n || !this._observers || !this._observers[n]) return false;
-		
+        if(!n || (this.nodeType <= 0 && (!this._observers || !this._observers[n]))) return false;
+
 		if(a) {
 			a = Array.prototype.slice.call(arguments);
 			a.shift();
 		}
 		if(this.nodeType > 0) {
 			var e;
-			if (document.createEvent) {
+            if (n === 'click') {
+                this.click();
+            } else if (document.createEvent) {
 				e = document.createEvent("HTMLEvents");
 				e.initEvent(n, true, true);
 				if(a) e.extend(a);
@@ -1158,9 +1162,11 @@
 				this.fireEvent("on"+n, e);
 			}
 		} else {
-			for(var i = 0; i < this._observers[n].length; i++) {
-				this._observers[n][i].apply(this, a);
-			}
+			if (this._observers && this._observers[n]) {
+                for(var i = 0; i < this._observers[n].length; i++) {
+                    this._observers[n][i].apply(this, a);
+                }
+            }
 		}
 		return this;
 	};
