@@ -137,6 +137,19 @@
 		parent: function() {
 			return $(this.active().parentNode);
 		},
+        parents: function(s) {
+            var a = [], p = $.parseSelector(s);
+            $.each(this, function() {
+                var element = this;
+                while(element.parentNode && !$.checkElement(element.parentNode, p)) {
+                    element = element.parentNode;
+                }
+                if (element.parentNode) {
+                    a.push(element.parentNode);
+                }
+            });
+            return $(a);
+        },
 		children: function(s) {
 			var a = [], p = $.parseSelector(s);
 			$.each(this, function() {
@@ -359,12 +372,12 @@
 		data: function(p,v,d) {
 			if(p && v) {
 				p = p.removeChars('-');
-				if(!d)
+				if(!this.dataset || d)
 					$.each(this, function() { this['data_'+p] = v; });
 				else
 					$.each(this, function() { this.dataset[p] = v; });
 			} else if(p) {
-				return this.active().dataset[p] || this.active()['data-'+p];
+				return this.active().dataset[p] || this.active()['data_'+p];
 			}
 			return this;
 		},
@@ -560,7 +573,7 @@
 			return this;
 		},
 		
-		on: function(n,f) {
+		on: function(n, f) {
 			if(!f) return this.emit(n);
 			$.each(this, function() {
 				this.on(n,f);
@@ -582,15 +595,10 @@
 			return this;
 		},
 		rightclick: function(f) {
-			return this.on('contextmenu', f);
+			return this.active().on('contextmenu', f);
 		},
 		focus: function(f) {
-			if(!f) {
-				this.active().focus();
-			} else {
-				this.on('focus', f);
-			}
-			return this;
+            return this.active().on('focus', f);
 		},
 		wrap: function(p) {
 			if(!(p instanceof $)) return false;
@@ -1085,7 +1093,8 @@
 	    }
 	};
 	Object.prototype.on = function(n, f) {
-		if(!n || !f) return false;
+        if (!n) return false;
+        if (!f) return this.emit(n);
 		n = n.split(' ').clean('');
 		if(! this._observers) {
 			this._observers = {};
@@ -1140,16 +1149,18 @@
 		return this;
 	};
 	Object.prototype.emit = function(n, a) {
-        if(!n || (this.nodeType <= 0 && (!this._observers || !this._observers[n]))) return false;
+        if (!n) return false;
 
-		if(a) {
+		if (a) {
 			a = Array.prototype.slice.call(arguments);
 			a.shift();
 		}
-		if(this.nodeType > 0) {
+		if (this.nodeType > 0) {
 			var e;
             if (n === 'click') {
                 this.click();
+            } else if (n === 'focus') {
+                this.focus();
             } else if (document.createEvent) {
 				e = document.createEvent("HTMLEvents");
 				e.initEvent(n, true, true);
@@ -1161,11 +1172,9 @@
 				if(a) e.extend(a);
 				this.fireEvent("on"+n, e);
 			}
-		} else {
-			if (this._observers && this._observers[n]) {
-                for(var i = 0; i < this._observers[n].length; i++) {
-                    this._observers[n][i].apply(this, a);
-                }
+		} else if (this._observers && this._observers[n]) {
+            for(var i = 0; i < this._observers[n].length; i++) {
+                this._observers[n][i].apply(this, a);
             }
 		}
 		return this;
