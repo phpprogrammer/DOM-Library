@@ -579,7 +579,7 @@
 		},
 		
 		on: function(n, f) {
-			if(!f) return this.emit(n);
+			if(!f) return this.active().emit(n);
 			$.each(this, function() {
 				this.on(n,f);
 			});
