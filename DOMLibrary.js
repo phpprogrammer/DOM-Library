@@ -490,7 +490,11 @@
 			
 			this.transformMap = p;
 			
-			self.on($.browser.prefix.split('-').join('')+'TransitionEnd TransitionEnd', $.invoke(c, self));
+            var interval = setInterval(function() {
+                c.call(self);
+                clearInterval(interval);
+            }, def.duration + def.delay);
+			//self.on($.browser.prefix.split('-').join('')+'TransitionEnd TransitionEnd', $.invoke(c, self));
 
 			return this;
 		},
@@ -598,7 +602,9 @@
 			return this.active().on('contextmenu', f);
 		},
 		focus: function(f) {
-            return this.active().on('focus', f);
+            if (this.active())
+                this.active().on('focus', f);
+            return this;
 		},
 		wrap: function(p) {
 			if(!(p instanceof $)) return false;
