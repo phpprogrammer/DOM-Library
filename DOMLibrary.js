@@ -491,9 +491,8 @@
 			this.transformMap = p;
 			
             if (c) {
-                var interval = setInterval(function() {
+                setTimeout(function() {
                     c.call(self);
-                    clearInterval(interval);
                 }, def.duration + def.delay);
                 //self.on($.browser.prefix.split('-').join('')+'TransitionEnd TransitionEnd', $.invoke(c, self));
             }
