@@ -41,7 +41,7 @@
 					n = document.querySelectorAll(n);
 					this.push.apply(this, n);
 				} else if(n instanceof Function) {
-					$.ready(n);
+					$.ready(window, n);
 					return $.window;
 				} else if(n instanceof Object && n.hasOwnProperty('url')) {
 					$.ajax(n);
@@ -288,9 +288,13 @@
 			} else if(h === true) {
 				return this.active().outerHTML;
 			} else {
-				$.each(this, function() {
-					this.innerHTML = h+'';
-				});
+                if (this.g) {
+                    this.active().innerHTML = h+'';
+                } else {
+                    $.each(this, function() {
+                        this.innerHTML = h+'';
+                    });
+                }
 				return this;
 			} 
 		},
@@ -606,6 +610,56 @@
                 this.active().on('focus', f);
             return this;
 		},
+        load: function(f) {
+            return this.on('load', f);
+        },
+        submit: function() {
+            if (this.active())
+                this.active().submit();
+            return this;
+        },
+        ajaxSubmit: function(c) {
+            if (!this.active() || this.active().tagName.toLowerCase() !== 'form')
+                return this;
+            
+            var form = $(this.active());
+            
+            if (XMLHttpRequest) {
+                var href = form.attr('action'),
+                    method = form.attr('method'),
+                    uri = '',
+                    elms = form.find('*[name]');
+                
+                if (!href)
+                    href = '';
+                if (!method)
+                    method = 'post';
+                
+                elms.each(function(e,i) {
+                    if (i !== 0)
+                        uri += '&';
+                    uri += this.name + '=' + this.value;
+                });
+                    
+                $.ajax({ url: href+'?'+uri, type: method }, c);
+            } else {
+                var frame = $.create('iframe'),
+                    href = form.attr('action');
+                
+                if (!href)
+                    href = '';
+                
+                $().append(frame);
+                frame.attr({ name: 'ajaxFrame', src: href }).css({ width: 0, height: 0, opacity: 0 }).hide();
+                form.attr({ target: 'ajaxFrame'}).submit();
+                
+                if (c instanceof Function)
+                    frame.load(function(e) {
+                        c.call(form, frame.active().contentWindow.document.body.innerHTML, e);
+                    });
+            }
+            return this;
+        },
 		wrap: function(p) {
 			if(!(p instanceof $)) return false;
 			p.active().wrapAll(this);
@@ -924,23 +978,23 @@
 			hr.send(d);
 			return true;
 		},
-		ready: function(f) {
+		ready: function(w, f) {
 			var DOMContentLoaded = function() {
 				if(document.addEventListener) {
-					window.removeEventListener("DOMContentLoaded", DOMContentLoaded, false);
+					w.removeEventListener("DOMContentLoaded", DOMContentLoaded, false);
 					f.apply($.window);
 				} else if(document.readyState == 'complete') {
-					window.detachEvent("onreadystatechange", DOMContentLoaded);
+					w.detachEvent("onreadystatechange", DOMContentLoaded);
 					f.apply($.window);
 				}
 			};
 				
 			if(document.addEventListener)
-				window.addEventListener("DOMContentLoaded", DOMContentLoaded, false);
+				w.addEventListener("DOMContentLoaded", DOMContentLoaded, false);
 			else
-				window.attachEvent("onreadystatechange", DOMContentLoaded);
+				w.attachEvent("onreadystatechange", DOMContentLoaded);
 			
-			return $.window;
+			return w;
 		},
 		require: function(p) {
 			if(!p) return false;
