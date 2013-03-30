@@ -339,6 +339,23 @@
     		}
     		return { x: x, y: y };
 		},
+        prop: function(p,v) {
+            if (p != undefined && v != undefined) {
+                var t = p;
+                p = {};
+                p[t] = v;
+            }
+            if (p instanceof Object) {
+                $.each(this, function() {
+                    for (var s in p) {
+                        this[s] = p;
+                    }
+                });
+            } else {
+                return this.active()[p];
+            }
+            return this;
+        },
 		attr: function(p,v) {
 			if(p != undefined && v != undefined) {
 				var t = p;
@@ -346,7 +363,7 @@
 				p[t] = v.toString();
 			}
 			if(p instanceof Object) {
-				for(var s in p) {
+				for (var s in p) {
 					$.each(this, function() {
 						this.setAttribute(s, p[s]);
 					});
@@ -646,11 +663,13 @@
                     method = 'post';
                 
                 elms.each(function(e,i) {
-                    if (i !== 0)
-                        uri += '&';
-                    uri += this.name + '=' + this.value;
+                    if (this.type !== 'checkbox' || this.checked != false) {
+                        if (i !== 0)
+                            uri += '&';
+                        uri += this.name + '=' + this.value;
+                    }
                 });
-                    
+                
                 $.ajax({ url: href+'?'+uri, type: method }, c);
             } else {
                 var frame = $.create('iframe'),
@@ -786,7 +805,7 @@
 				tag = '', id = '', cl = '', attr = {}, not = '';
             
             if (d !== -1) {
-                s = s.replace(/\:(\w*)/g, '[$1]');
+                s = s.replace(/\:(\w*)/g, "[$1=$1]");
                 return $.parseSelector(s);
             }
             
@@ -797,7 +816,7 @@
 				if(e !== -1) {
 					attr[b.substring(0, e)] = b.substring(e+1);
 				} else {
-					attr[b] = 'true';
+					attr[b] = true;
 				}
 				s = s.substring(0, a) + s.substring(g+1);
 				a = s.indexOf('[');
