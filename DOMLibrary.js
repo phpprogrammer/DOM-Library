@@ -340,10 +340,10 @@
     		return { x: x, y: y };
 		},
 		attr: function(p,v) {
-			if(p && v) {
+			if(p != undefined && v != undefined) {
 				var t = p;
 				p = {};
-				p[t] = v;
+				p[t] = v.toString();
 			}
 			if(p instanceof Object) {
 				for(var s in p) {
@@ -1063,6 +1063,23 @@
 		}
 		return whitespace.indexOf(s.charAt(0)) === -1 ? s : '';
 	};
+    String.prototype.break = function(n) {
+        return this.lbreak(n).rbreak(n);
+    };
+    String.prototype.lbreak = function(n) {
+        var s = this, index = this.indexOf(n);
+        if (index === 0) {
+            s = s.substring(n.length);
+        }
+        return s;
+    };
+    String.prototype.rbreak = function(n) {
+        var s = this, index = this.indexOf(n);
+        if (index === s.length - n.length) {
+            s = s.substring(0, index);
+        }
+        return s;
+    };
 	String.prototype.removeChars = function() {
 		var n = this;
 		for(var i = 0; i < arguments.length; i++) {
