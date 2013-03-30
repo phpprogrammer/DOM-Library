@@ -352,7 +352,10 @@
 					});
 				}
 			} else {
-				return this.active().getAttribute(p);
+				var a = this.active().getAttribute(p);
+                if (a == null)
+                    return '';
+                return a;
 			}
 			return this;
 		},
@@ -373,6 +376,13 @@
 			}
 			return true;
 		},
+        is: function(s) {
+            s = $.parseSelector(s);
+            return $.checkElement(this.active(), s);
+        },
+        tag: function() {
+            return this.active().tagName.toLowerCase();
+        },
 		data: function(p,v,d) {
 			if(p && v) {
 				p = p.removeChars('-');
@@ -772,8 +782,14 @@
 				x = s.indexOf('#'),
 				y = s.indexOf('.'),
 				a = s.indexOf('['),
+                d = s.indexOf(':'),
 				tag = '', id = '', cl = '', attr = {}, not = '';
-
+            
+            if (d !== -1) {
+                s = s.replace(/\:(\w*)/g, '[$1]');
+                return $.parseSelector(s);
+            }
+            
 			while(a !== -1) {
 				var g = s.indexOf(']') || s.length,
 					b = s.substring(a+1, g).removeChars('"', "'"),
@@ -781,7 +797,7 @@
 				if(e !== -1) {
 					attr[b.substring(0, e)] = b.substring(e+1);
 				} else {
-					attr[b] = true;
+					attr[b] = 'true';
 				}
 				s = s.substring(0, a) + s.substring(g+1);
 				a = s.indexOf('[');
